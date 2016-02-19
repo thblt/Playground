@@ -1,0 +1,10 @@
+# General
+.DS_Store
+*.a
+*.o
+
+# Haskell-specific 
+*.hi
+
+# Python
+*.pyc

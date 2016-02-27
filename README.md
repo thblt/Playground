@@ -5,7 +5,7 @@
 This is a repository for miscellaneous code projects with no immediate
 interest, mostly toy/self-teaching projects.
 
-** Not for reuse
+## Not for reuse
 
 The code in this repository is open-source, but **it is not free**:
 redistribution of modified or identical versions, or inclusion in

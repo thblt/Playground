@@ -2,7 +2,7 @@ This is a simple and relatively naive sudoku solver in Haskell. It is
 a toy program to teach myself Haskell, not anything serious.
 
 Same goes for toy sudoku solvers as for toy RSA implementations: DON'T
-USE THEM. Ever. Toy with them as much as you want, but don't use them
+USE THEM. Ever. Play with them as much as you want, but don't use them
 in any other code. 
 
 The general behavior is as follows:

@@ -1,4 +1,6 @@
-#+TITLE: Rendering a list of words as a decision tree.  A funny program.
+#+TITLE: Making a decision tree out of a vocabulary
+
+*A useless toy program to teach myself some C and graph algorithms*
 
 * General
 

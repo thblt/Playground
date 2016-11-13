@@ -1,0 +1,11 @@
+#+TITLE: Rendering a list of words as a decision tree.  A funny program.
+
+* General
+
+The program will render a decision tree for a provided vocabulary.  It will have at most as much entry points as there are letters in the alphabet.  
+
+#+begin_src 
+.---.   .---.   .---.   .---.   .---.
+| A |-->| B |-->| C |-->| D |-->| E |
+'---'   '---'   '---'   '---'   '---'
+#+end_src

@@ -2,10 +2,70 @@
 
 * General
 
-The program will render a decision tree for a provided vocabulary.  It will have at most as much entry points as there are letters in the alphabet.  
+The program will render a decision tree for a provided vocabulary.  It will have at most as much entry points as there are letters in the alphabet (exactly as much entry points as there are unique letters which actually begin a word.  The exact definition of letter may vary[fn:1]).  
+
+Obviously, a single character may (and, for real languages, will) appear multiple times in the graph.
+
+Initial example.  The word ABCDE will be rendered as:
 
 #+begin_src 
 .---.   .---.   .---.   .---.   .---.
 | A |-->| B |-->| C |-->| D |-->| E |
 '---'   '---'   '---'   '---'   '---'
 #+end_src
+
+Where A is the single entry point of the graph.
+
+* Initial draft
+
+Nodes are displayed as letters, but stored as the suffix they represent.  In the example above, the node B is internally referred to as "BCDE": all paths (words) which end in BCDE will connect to this node.
+
+Running the compiler with a vocabulary made of "ABCDE" and "KBCDE" will lead to the nodes ABCDE, BCDE, CDE, DE, E, KBCDE, BCDE, CDE, DE and E being generated.  The nodes files is then sorted, the nodes are deduplicated and an initial graph can be rendered.
+
+The initial version uses graphviz to actually render a graph.
+
+* First improvement: deduplication of parts of words
+
+A vocabulary made of:
+
+ - ABCDEF
+ - ABCDZY
+ - GHCDEF
+ - GHCDZY
+
+would, following the initial approach, produce useless duplication in the generated graph:
+
+#+begin_src 
+A -> B \
+        \- C -> D -> E -> F
+        /- C -> D -> Z -> Y
+G -> H /
+#+end_src
+
+where the simplest tree would be:
+
+#+begin_src
+A -> B \      / E -> F
+        C -> D 
+G -> H /      \ Z -> Y
+#+end_src
+
+Since many languages have a lot of words build using a common prefix with different suffixes (creak, creaks, creaky, creaking), optimizing this would really reduce the size of the graph.
+
+The point is to determine if, for multiple paths sharing a common prefix, we can actually merge them as a single path splitting later in two or more separate (in the example above, =CDEF= and =CDZY= and can and should be merged as =CD[EF|ZY]=).  The answer to this question is in fact trivial: do the sets of paths which lead to each of these paths is identical?
+
+#+begin_src c
+typedef struct {
+  bool initial;
+  const char * value;
+  vector nodes_from, // Paths which arrive at this node.
+         nodes_to;   // Paths to which this node leads.
+} node;
+  
+#+end_src
+
+
+* Footnotes
+
+[fn:1] In French, the status of accentuated characters is ambiguous, in Spanish, N and Ñ are considered two different letters.  What makes a word or a letter is deeply dependent on the language; the only strong constant (for this project) being that *a word is a finite sequence of letters*.
+

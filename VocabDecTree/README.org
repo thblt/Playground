@@ -2,15 +2,16 @@
 
 *A useless toy program to teach myself some C and graph algorithms*
 
-* General
+The goal is to make a program to render a list of vocabulary as a decision tree, or flowchart.  This tree:
 
-The program will render a decision tree for a provided vocabulary.  It will have at most as much entry points as there are letters in the alphabet (exactly as much entry points as there are unique letters which actually begin a word.  The exact definition of letter may vary[fn:1]).  
+ * will have at most as much entry points as there are letters in the alphabet.  Each entry point will be unique.
+ * will be as simple as possible, without duplicate paths.
+ * there will be exactly one path from an entry point to an exit point for each word in the vocabulary.
+ * the tree will be as simple as possible, that is, the number of nodes and edges will be kept to a minimum.
 
-Obviously, a single character may (and, for real languages, will) appear multiple times in the graph.
+A vocabulary consisting of the word ABCDE will be rendered as:
 
-Initial example.  The word ABCDE will be rendered as:
-
-#+begin_src 
+*#+begin_src 
 .---.   .---.   .---.   .---.   .---.
 | A |-->| B |-->| C |-->| D |-->| E |
 '---'   '---'   '---'   '---'   '---'
@@ -18,15 +19,33 @@ Initial example.  The word ABCDE will be rendered as:
 
 Where A is the single entry point of the graph.
 
-* Initial draft
+** A note on vocabulary
 
-Nodes are displayed as letters, but stored as the suffix they represent.  In the example above, the node B is internally referred to as "BCDE": all paths (words) which end in BCDE will connect to this node.
+ - A vocabulary :: is a finite, unordered set of words.
+ - A word :: is a finite sequence of /letters/.
+ - A letter :: is, for the initial implementation, any 8-bit character.  Further work may extend this definition to include non-Latin alphabets or to consider diacritics as letter variants.
 
-Running the compiler with a vocabulary made of "ABCDE" and "KBCDE" will lead to the nodes ABCDE, BCDE, CDE, DE, E, KBCDE, BCDE, CDE, DE and E being generated.  The nodes files is then sorted, the nodes are deduplicated and an initial graph can be rendered.
+* Initial implementation
 
-The initial version uses graphviz to actually render a graph.
+The initial implementation does no actual rendering, and simply generates an optimized file in dot syntax, which can be rendered using Graphviz or similar tools.
 
-* First improvement: deduplication of parts of words
+ * Internally, a node is stored as the combination of: a) the letter it represents b) the path the follows it.  Eg, a node ELTA corresponds to the letter E followed by L, T and A.
+
+ * For each word, nodes are created for the full word and for the full set of its suffixes.  "Delta" then produces the nodes DELTA, ELTA, LTA, TA, A and the edges DELTA->ELTA->LTA->TA->A, which renders as 
+
+   *#+begin_src 
+   .---.   .---.   .---.   .---.   .---.
+   | D |-->| E |-->| L |-->| T |-->| A |
+   '---'   '---'   '---'   '---'   '---'
+   #+end_src
+
+ * Since this process may generate duplicate nodes, the node set is sorted and non-duplicate nodes and edges are written to the file.
+
+** Complexity
+
+The most significant factor of this initial approach is the sorting step, thus, if Quicksort is used, it should run in Θ(n /lg/ n).
+
+* First improvement: deduplication of subpaths
 
 A vocabulary made of:
 
@@ -35,7 +54,7 @@ A vocabulary made of:
  - GHCDEF
  - GHCDZY
 
-would, following the initial approach, produce useless duplication in the generated graph:
+would, following the previous algorithm, produce useless duplication in the generated graph:
 
 #+begin_src 
 A -> B \
@@ -52,19 +71,65 @@ A -> B \      / E -> F
 G -> H /      \ Z -> Y
 #+end_src
 
-Since many languages have a lot of words build using a common prefix with different suffixes (creak, creaks, creaky, creaking), optimizing this would really reduce the size of the graph.
+This is because the original approach only join identical suffixes.  This is not a too-bad approach, because a lot of words actually share a common suffix: leaking, flicking, lurking.  But a lot of languages also have common prefixes: creak, creaks, creaky, creaking.  Using the initial algorithm, a vocabulary made of these four words would generate four completely separate paths, which is clearly suboptimal. 
 
-The point is to determine if, for multiple paths sharing a common prefix, we can actually merge them as a single path splitting later in two or more separate (in the example above, =CDEF= and =CDZY= and can and should be merged as =CD[EF|ZY]=).  The answer to this question is in fact trivial: do the sets of paths which lead to each of these paths is identical?
+We want to merge common prefixes of subpaths if and only if they meet the following conditions, given A and B two subpaths sharing a common prefix:
+
+ - The sets of nodes arriving to A and B are identical.
+ - The sets of nodes departing from A and B are identical.
+
+Given a vocabulary made of:
+
+ - Freak
+ - Freaks
+ - Freaking
+ - Freakily
+ - Creak
+ - Creaks
+ - Creaking
+ - Creakily
+
+We could identify the the subpath R -> E -> A meet both these requirements, and subpaths starting from it could be simplified as REA[K|KS|KING|KILY], which itself can be further simplified as REA[K|K[S|I[LY|NG]]]
+
+This optimization can be implemented the following way.  Given the representation of a node as:
 
 #+begin_src c
 typedef struct {
-  bool initial;
-  const char * value;
-  vector nodes_from, // Paths which arrive at this node.
-         nodes_to;   // Paths to which this node leads.
+  bool initial; // True if this node is an entry point.
+  char value;   // The letter this node represents.
+  vec *nodes_from, // Edges which arrive at this node.
+      *nodes_to;   // Edges to which this node leads.
+  void *merged_with; // This pointer should point to *this* node by default.
 } node;
-  
+
+node *node_init(char value, bool initial) {
+  node *ret = (node*) malloc(sizeof(node));
+  ret->value = value;
+  ret->initial = initial;
+  ret->merged_with_node = ret 
+  ret->nodes_from = vec_init(sizeof(node), 10)
+  ret->nodes_to = vec_init(sizeof(node), 10)
+}
 #+end_src
+
+We can first sort the node set by =initial=, value, =vec_len(nodes_from)= and =vec_len(nodes_to)=.  We then traverse the set and, for nodes with the same (value, length of nodes_from, length of nodes_to), compare the exact value of nodes_from and nodes_to.  If they're identical, we update the merged_with pointer of the second one to the address of the first one.
+
+We iterate this step until nothing's been done during a full iteration.  Then, we simply have to traverse the list of the nodes and export the unmerged ones (those whose =merged_with= pointer points to their location)
+
+(We may use the value of the pointers to generate the identifiers)
+
+* Another optimization step: don't have exit points
+
+Instead of using exit points, we could simply render the edge in a way that marks the fact that the last letter is the end of the word.  We'll in fact require three edge styles:
+
+ - Part of a word. Eg, the N in FREAKS
+ - Stricly end of a word (don't go further) (the S in FREAKS)
+ - Possible end of a word (but may continue) (the K in FREAKS)
+
+* Another optimization step: reuse entry points
+
+
+
 
 
 * Footnotes

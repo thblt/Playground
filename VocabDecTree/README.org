@@ -11,7 +11,7 @@ The goal is to make a program to render a list of vocabulary as a decision tree,
 
 A vocabulary consisting of the word ABCDE will be rendered as:
 
-*#+begin_src 
+#+begin_src 
 .---.   .---.   .---.   .---.   .---.
 | A |-->| B |-->| C |-->| D |-->| E |
 '---'   '---'   '---'   '---'   '---'

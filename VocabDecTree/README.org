@@ -122,17 +122,8 @@ We iterate this step until nothing's been done during a full iteration.  Then, w
 
 Instead of using exit points, we could simply render the edge in a way that marks the fact that the last letter is the end of the word.  We'll in fact require three edge styles:
 
- - Part of a word. Eg, the N in FREAKS
+ - Part of a word. Eg, the E in FREAKS
  - Stricly end of a word (don't go further) (the S in FREAKS)
  - Possible end of a word (but may continue) (the K in FREAKS)
 
 * Another optimization step: reuse entry points
-
-
-
-
-
-* Footnotes
-
-[fn:1] In French, the status of accentuated characters is ambiguous, in Spanish, N and Ñ are considered two different letters.  What makes a word or a letter is deeply dependent on the language; the only strong constant (for this project) being that *a word is a finite sequence of letters*.
-

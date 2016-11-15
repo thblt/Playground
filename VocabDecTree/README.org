@@ -11,7 +11,7 @@ The goal is to make a program to render a list of vocabulary as a decision tree,
 
 A vocabulary consisting of the word ABCDE will be rendered as:
 
-*#+begin_src 
+#+begin_src 
 .---.   .---.   .---.   .---.   .---.
 | A |-->| B |-->| C |-->| D |-->| E |
 '---'   '---'   '---'   '---'   '---'
@@ -33,7 +33,7 @@ The initial implementation does no actual rendering, and simply generates an opt
 
  * For each word, nodes are created for the full word and for the full set of its suffixes.  "Delta" then produces the nodes DELTA, ELTA, LTA, TA, A and the edges DELTA->ELTA->LTA->TA->A, which renders as 
 
-   *#+begin_src 
+   #+begin_src 
    .---.   .---.   .---.   .---.   .---.
    | D |-->| E |-->| L |-->| T |-->| A |
    '---'   '---'   '---'   '---'   '---'
@@ -122,19 +122,34 @@ We iterate this step until nothing's been done during a full iteration.  Then, w
 
 Instead of using exit points, we could simply render the edge in a way that marks the fact that the last letter is the end of the word.  We'll in fact require three edge styles:
 
- - Strictly part of a word. Eg, the N in FREAKS
+ - Strictly part of a word. Eg, the E in FREAKS
  - Stricly end of a word (don't go further) (the S in FREAKS)
  - Possible end of a word (but may continue) (the K in FREAKS)
 
-* Another optimization step: reuse points
+Something like:
+
+#+begin_src
+.---.   .---.   .---.   .---.     .---.    .---.
+| F |-->| R |-->| E |-->| A |-c-> | K |-o->| S |
+'---'   '---'   '---'   '---'     '---'    '---'
+#+end_src
+
+where =-c->= is a /possibly final/ edge, =-o->= is a /strictly final/ edge
+
+This will remove at much as much nodes are there are letters in the alphabet, it may remove a ton of edges.
+
+* Another optimization step: reuse nodes
+
+This is the most tricky part.  
+
+The latest optimization implies that some nodes become strictly equivalent: when using the "strictly final" edge style, every node with the correct letter can be a candidate for the final letter of a given word.  We may then try to determine which of all these candidates we should connect the 
+
+ point, why not choose the node which will least clutter the graph.  Given the the word BREAKS, can we simply identify the nearest S and draw an edge to it with the "strictly end" marker on it?
+
+This would be a fun part, but would imply that our program actually controls the actual graphical rendering of the tree, instead of simply feeding data to graphviz. 
 
 
 
 
 
-
-
-* Footnotes
-
-[fn:1] In French, the status of accentuated characters is ambiguous, in Spanish, N and Ñ are considered two different letters.  What makes a word or a letter is deeply dependent on the language; the only strong constant (for this project) being that *a word is a finite sequence of letters*.
 

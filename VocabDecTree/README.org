@@ -33,7 +33,7 @@ The initial implementation does no actual rendering, and simply generates an opt
 
  * For each word, nodes are created for the full word and for the full set of its suffixes.  "Delta" then produces the nodes DELTA, ELTA, LTA, TA, A and the edges DELTA->ELTA->LTA->TA->A, which renders as 
 
-   *#+begin_src 
+   #+begin_src 
    .---.   .---.   .---.   .---.   .---.
    | D |-->| E |-->| L |-->| T |-->| A |
    '---'   '---'   '---'   '---'   '---'

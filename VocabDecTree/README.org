@@ -118,15 +118,17 @@ We iterate this step until nothing's been done during a full iteration.  Then, w
 
 (We may use the value of the pointers to generate the identifiers)
 
-* Another optimization step: don't have exit points
+* Another optimization step: don't have exit-only points
 
 Instead of using exit points, we could simply render the edge in a way that marks the fact that the last letter is the end of the word.  We'll in fact require three edge styles:
 
- - Part of a word. Eg, the N in FREAKS
+ - Strictly part of a word. Eg, the N in FREAKS
  - Stricly end of a word (don't go further) (the S in FREAKS)
  - Possible end of a word (but may continue) (the K in FREAKS)
 
-* Another optimization step: reuse entry points
+* Another optimization step: reuse points
+
+
 
 
 
